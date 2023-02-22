@@ -1,0 +1,64 @@
+Librerías
+#!pip install plotly.io
+import plotly.io as pio
+pio.renderers.keys()
+pio.renderers.default = 'notebook' 
+Librerías
+#!pip install numpy
+#!pip install pandas
+#!pip install matplotlib
+#!pip install seaborn
+#!pip install sklearn
+!pip install mlxtend --upgrade
+#!pip install patsy
+#!pip install plotly.express
+#!pip install warnings
+#!pip install re 
+
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+plt.style.use('ggplot')
+pd.set_option("display.max_columns", None)
+sns.set_style('darkgrid')
+import scipy.stats as stats
+import patsy
+import plotly.express as px
+import warnings
+warnings.filterwarnings("ignore")
+import re
+"""Funciones de sklearn y otros"""
+#Feature Engineering
+from sklearn.impute import SimpleImputer, KNNImputer
+from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder, OneHotEncoder
+
+#Feature Selection
+from mlxtend.feature_selection import SequentialFeatureSelector as sfs
+
+#Pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
+
+#Algorithms
+from sklearn.linear_model import LogisticRegression
+from statsmodels.formula.api import logit 
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.naive_bayes import GaussianNB
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+
+#Model Validation
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold, ShuffleSplit, LeaveOneOut, RepeatedKFold
+
+#Model goodness
+from sklearn.model_selection import cross_val_score, cross_val_predict
+from sklearn import metrics
+
+#Model tunning
+from sklearn.model_selection import GridSearchCV
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
