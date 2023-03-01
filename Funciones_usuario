@@ -37,13 +37,18 @@ def categorizar(data):
             data[col] = data[col].astype('category')
     return data
 
-## Función para cambiar una cadena de simbolos por "_" a los nombres de variables
+## Función para cambiar una cadena de simbolos por "_" al nombre de variable
 def renombrar(data, simb):
-    for col in data.columns:
-        col2 = re.sub(simb, "_", col)
-        data.rename(columns={col : col2},
+
+  for col in data.columns:
+      if col.endswith("0"):
+        col2 = ''.join((col,'_'))
+      else:
+        col2 = col
+      col3 = re.sub(simb, "_", col2)
+      data.rename(columns={col : col3},
                        inplace = True)
-    return data
+  return data
 
 ## Función para eliminar columnas
 def eliminar_columnas(data, col = []):
@@ -67,8 +72,7 @@ def biplot(data, cols = [], obj = None):
             print('Variable categórica : '+col)
             sns.countplot(data=data, x=col, hue=obj)
             plt.show()
-    
-## Función manual de winsor con clip+quantile 
+  ## Función manual de winsor con clip+quantile 
 def winsorize_with_pandas(s, limits):
     """
     s : pd.Series
@@ -109,6 +113,7 @@ def gestiona_outliers(col,clas = 'check'):
         col.loc[criterio1&criterio2] = np.nan
         print('MissingDespues: ' + str(col.isna().sum()) +'\n')
         return(col)
+
 def imputar_NA(data, cols, imputer):
     #Rellena los NAs a través de los vecinos 'cols'
     #Nos servirá para todas las variables que estén tengan NAs
@@ -136,7 +141,6 @@ def imputar_NA(data, cols, imputer):
             sns.countplot(data=data2, x=col)
             plt.show()
     return data2
-
 # Función para calcular VCramer 
 def cramers_v(var1, varObj):
     if not var1.dtypes.name == 'category':
@@ -146,24 +150,27 @@ def cramers_v(var1, varObj):
     data = pd.crosstab(var1, varObj).values
     vCramer = stats.contingency.association(data, method = 'cramer')
     return vCramer
-## Función mejor tranformación
-# Busca la transformación de variables input de intervalo que maximiza la VCramer o 
-# la correlación tipo Pearson con la objetivo
-def standard_scaler (f, c):
-    sclr = StandardScaler()
-    scld = sclr.fit_transform(f[[c]])
-    return scld
+#Función que escala variables numéricas
+def escalar(ft, col, scaler=StandardScaler()):
+    scaled = scaler.fit_transform(ft[col])
+    return scaled
 
+## Función mejor tranformación
+# Busca la transformación de variables input de intervalo que maximiza  
+# la VCramer o la correlación tipo Pearson con la objetivo
+#Repositorio Guillermo Villarino "Nuestras funciones"
 def mejorTransf (ft, col, target, name=False, tipo = 'cramer', graf=False):
 
-    # Escalado de datos (evitar fallos de tamaño de float64 al hacer exp de número grande)
+    # Escalado de datos (evitar fallos de tamaño de float64
+    #al hacer exp de número grande)
     scaler = MinMaxScaler()
     scaled = scaler.fit_transform(ft[[col]])
     vv = []
     for i in scaled:
         vv.append(float(i))
     vv = pd.Series(vv, name=col)
-    # Traslación a valores positivos de la variable (sino fallaría log y las raíces)
+    # Traslación a valores positivos de la variable
+    #(sino fallaría log y las raíces)
     vv = vv + abs(min(vv))+0.0001
 
     # Definimos y calculamos las transformaciones típicas  
@@ -184,33 +191,33 @@ def mejorTransf (ft, col, target, name=False, tipo = 'cramer', graf=False):
       # Si queremos gráfico, muestra comparativa entre las posibilidades
     if graf: px.bar(tablaCramer,
                     x=tablaCramer.VCramer,
-                    title='Relaciones frente a ' + target.name).update_yaxes(categoryorder="total ascending").show()
+                    title='Relaciones frente a ' + target.name)\
+                    .update_yaxes(categoryorder="total ascending").show()
       # Identificar mejor transformación
     best = tablaCramer.query('VCramer == VCramer.max()').index
     ser = transf[best[0]].squeeze()
 
     if tipo == 'cor':
         
-      # Aplicar coeficiente de correlación a cada transformación frente a la respuesta
-        tablaCorr = pd.DataFrame(transf.apply(lambda x: np.corrcoef(x,target)[0,1]),
+      # Aplicar coeficiente correlación a cada transformación frente la respuesta
+        tablaCorr = pd.DataFrame(
+            transf.apply(lambda x: np.corrcoef(x,target)[0,1]),
                                 columns=['Corr'])
       # Si queremos gráfico, muestra comparativa entre las posibilidades
         if graf : px.bar(tablaCorr,
                          x=tablaCorr.Corr,
-                         title='Relaciones frente a ' + target.name).update_yaxes(categoryorder="total ascending").show()
+                         title='Relaciones frente a ' + target.name).\
+                         update_yaxes(categoryorder="total ascending").show()
       # identificar mejor transformación
         best = tablaCorr.query('Corr.abs() == Corr.abs().max()').index
         ser = transf[best[0]].squeeze()
 
-    # Aquí distingue si se devuelve la variable transformada o solamente el nombre de la transformación
+    # Aquí distingue si se devuelve la variable transformada
+    #o solamente el nombre de la transformación
     if name:
         return(ser.name)
     else:
         return(ser)
-
-def escalar(ft, col, scaler=StandardScaler()):
-    scaled = scaler.fit_transform(ft[col])
-    return scaled
 # Función para generar la fórmula
 def ols_formula(df, dependent_var, *excluded_cols):
     df_columns = list(df.columns.values)
@@ -218,45 +225,11 @@ def ols_formula(df, dependent_var, *excluded_cols):
     for col in excluded_cols:
         df_columns.remove(col)
     return dependent_var + ' ~ ' + ' + '.join(df_columns)
-def tr_tst_eval_log(formula, data):
-    # Generamos las matrices de diseño según la fórmula de modelo completo
-    y, X = patsy.dmatrices(formula, data, return_type='dataframe')
 
-    # Creamos 4 objetos: predictores para tr y tst y variable objetivo para tr y tst. 
-    X_tr, X_tst, y_tr, y_tst = train_test_split(X, y, test_size=0.2, random_state=1234)
-
-    # Definición de modelo
-    modelo = LogisticRegression(max_iter=1000)
-
-    # Arreglar y para que le guste a sklearn...numeric
-    y_tr_ = y_tr.iloc[:,0].ravel()
-
-    # Ajuste de modelo
-    modelLog = modelo.fit(X_tr,y_tr_)
-
-    # Accuracy del modelo en training
-    acc = modelLog.score(X_tr,y_tr_)
-    print('Accuracy en training: ',acc, '\n')
-
-    # Predicciones en test
-    y_pred = modelLog.predict(X_tst)
-
-    # Matriz de confusion de clasificación 
-    print('Matriz de confusión y métricas derivadas: \n',metrics.confusion_matrix(y_tst,y_pred))
-
-    # Reporte de clasificación 
-    print(metrics.classification_report(y_tst,y_pred))
-
-    # Extraemos el Area bajo la curva ROC
-    print('Area bajo la curva ROC training: \n', metrics.roc_auc_score(y_tr, modelLog.predict_proba(X_tr)[:, 1]))
-    print('Area bajo la curva ROC test: \n', metrics.roc_auc_score(y_tst, modelLog.predict_proba(X_tst)[:, 1]))
 #Función para comparación por validación cruzada
-def cross_val_model(X, y, name, repeated=False,
-                    model_df = pd.DataFrame({
-                        'Model': pd.Series(dtype='str'),
-                        'Accuracy': pd.Series(dtype='float')
-                        }),  
+def cross_val_model(X, y, name, data, repeated=False,  
                       model=LogisticRegression(random_state=seed), 
+                    graph = True,
                       seed=seed):
     if repeated == True:
       cv = RepeatedKFold(n_splits=5, n_repeats=3, random_state=seed)
@@ -265,29 +238,19 @@ def cross_val_model(X, y, name, repeated=False,
     # Obtenemos los resultados de R2 para cada partición tr-tst
     scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv)
     for score in scores:
-      model_df.loc[len(model_df)] = [name, score]
+      data.loc[len(data)] = [name, score]
     # Sesgo y varianza
-    plt.figure(figsize=(8,8))
-    sns.boxplot(
-            x=model_df.columns[0],
-            y=model_df.columns[1],
-            data=model_df, 
-            palette='viridis')
-    plt.show()
-    return model_df
-# Función pto de corte por Youden
-def cutoff_youden(test,pred):
-    fpr, tpr, thresholds = metrics.roc_curve(test,pred)
-    j_scores = tpr-fpr
-    j_ordered = sorted(zip(j_scores,thresholds))
-    return j_ordered[-1][1]
-def corte_funcion(y, cort):
-    for i in y:
-        if y[i] > cort:
-            y[i] = 1
-        else:
-            y[i] = 0
-    return y
+    #print("Media scoring "+str(np.mean(scores)))
+    #print("Desviación típica "+str(np.std(scores)))
+    if graph == True:
+      plt.figure(figsize=(8,8))
+      sns.boxplot(
+              x=data.columns[0],
+              y=data.columns[1],
+              data=data, 
+              palette='viridis')
+      plt.show()
+    return data
 
 # feature selection
 def select_features(X_tr, y_tr, X_tst):
