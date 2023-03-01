@@ -1,19 +1,29 @@
-Librerías
-#!pip install plotly.io
-import plotly.io as pio
-pio.renderers.keys()
-pio.renderers.default = 'notebook' 
-Librerías
+#Instalación de paquetes
+
 #!pip install numpy
 #!pip install pandas
 #!pip install matplotlib
 #!pip install seaborn
+#!pip install scipy
 #!pip install sklearn
-!pip install mlxtend --upgrade
 #!pip install patsy
-#!pip install plotly.express
 #!pip install warnings
 #!pip install re 
+#!pip install tensorflow
+#!pip install hyperopt
+#!pip install tpot
+#!pip install plotly.io
+#!pip install xgboost
+#!pip install shap
+
+# Librerías Google Colab
+from google.colab import drive
+drive.mount('/content/drive')
+
+#Librerías Jupyter Notebook
+#import plotly.io as pio
+#pio.renderers.keys()
+#pio.renderers.default = 'notebook'
 
 import numpy as np
 import pandas as pd
@@ -24,17 +34,19 @@ pd.set_option("display.max_columns", None)
 sns.set_style('darkgrid')
 import scipy.stats as stats
 import patsy
-import plotly.express as px
 import warnings
 warnings.filterwarnings("ignore")
 import re
+#import shap
+
 """Funciones de sklearn y otros"""
 #Feature Engineering
-from sklearn.impute import SimpleImputer, KNNImputer
-from sklearn.preprocessing import StandardScaler, MinMaxScaler, LabelEncoder, OneHotEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import StandardScaler, LabelEncoder, MinMaxScaler
 
 #Feature Selection
-from mlxtend.feature_selection import SequentialFeatureSelector as sfs
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import mutual_info_classif
 
 #Pipeline
 from sklearn.pipeline import Pipeline, make_pipeline
@@ -42,23 +54,29 @@ from sklearn.pipeline import Pipeline, make_pipeline
 #Algorithms
 from sklearn.linear_model import LogisticRegression
 from statsmodels.formula.api import logit 
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.naive_bayes import GaussianNB
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.svm import SVC
+import xgboost as xgb
 
 #Model Validation
 from sklearn.model_selection import train_test_split
-from sklearn.model_selection import KFold, ShuffleSplit, LeaveOneOut, RepeatedKFold
+from sklearn.model_selection import KFold, RepeatedKFold
 
 #Model goodness
 from sklearn.model_selection import cross_val_score, cross_val_predict
 from sklearn import metrics
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay
 
 #Model tunning
-from sklearn.model_selection import GridSearchCV
+import hyperopt
+from hyperopt import fmin, tpe, hp, STATUS_OK, Trials, space_eval
+#from tpot import TPOTClassifier
+
+"""Redes"""
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+from tensorflow.keras.utils import plot_model
